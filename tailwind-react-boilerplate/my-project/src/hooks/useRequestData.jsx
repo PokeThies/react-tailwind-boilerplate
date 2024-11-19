@@ -11,7 +11,7 @@ const useRequestData = () => {
    * @param {string} url link til api'en
    * @param {string} method  hvilken måde du ville bruge api'en på (GET, POST, DELETE)'
    * @param {JSON} bodydata Data der skal sendes til api'en
-   *  @param {JSOn} headers
+   * @param {JSOn} headers
    * @param {JSON} params Special data til api'en så som api key
    */
   const makeRequest = async (url, method = "GET", bodydata = null) =>
@@ -65,7 +65,7 @@ const useRequestData = () => {
       }
     };
 
-  return {makeRequest, isLoading, data, error}; // sender den data tilbage som skal bruges yden for dette script som sender det tilbage som et JSON ibjet (Den data inden indefor tuborg klarmmern)
+  return {makeRequest, isLoading, data, error}; // sender den data tilbage som skal bruges yden for dette script som sender det tilbage som et JSON ibjet (Den data inden indefor tuborg klammerne)
 }
 
 export default useRequestData;
