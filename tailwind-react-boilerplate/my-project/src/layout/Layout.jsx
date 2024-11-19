@@ -6,8 +6,6 @@ import {Outlet} from 'react-router-dom'
 const Layout = () => {
   return (
     <div>
-       
-
         <Header/>
 
         <main>
@@ -15,7 +13,6 @@ const Layout = () => {
         </main>
 
         <Footer/>
-      
     </div>
   )
 }
