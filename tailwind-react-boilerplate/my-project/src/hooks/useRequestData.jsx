@@ -1,100 +1,75 @@
-import { useState } from "react";
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { useState } from "react"
+import axios from "axios"
 
-/* Examples of hooks */
-/*
-makeRequest(`users`);
-makeRequest(`users`, "POST", { "Content-Type": "application/json" }, { name: "John Doe" });
-makeRequest(`users/${id}`, "PUT", { "Content-Type": "application/json" }, { name: "Jane Doe" });
-makeRequest(`users/${id}`, "DELETE");
-*/
-const domain = "http://localhost:8101";
+const useRequestData = () => {
 
-interface RequestData {
-  makeRequest: (
-    url: string,
-    method?: string,
-    headers?: Record<string, string> | undefined,
-    data?: any
-  ) => Promise<void>;
-  isLoading: boolean;
-  data: any;
-  error: boolean;
-}
+    const [ isLoading, setIsLoading] = useState(false);
+    const [ data, setData] = useState(null);
+    const [ error, setError] = useState(null);
 
-function useRequestData(): RequestData {
-  const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState<any>(null);
-  const [error, setError] = useState(false);
+    /**
+     * lav en request til en api
+     * @param {string} url link til api'en
+     * @param {string} method hvilken måde du vil bruge api'en på (GET, POST, DELETE)
+     * @param {JSON} bodydata data der skal sendes til api'en
+     * @param {JSON} headers 
+     * @param {JSON} params spcial data til api'en så som api key 
+     */
+    const makeRequest = async (url, method = "GET", bodydata = null, headers = null, params = null) =>
+    //funktionen er async fordi det giver browseren mulighed for at køre functionen i bagrunden mens brugeren kigger på/bruger hjemmesiden
+    {
+        setIsLoading( true );
 
-  const makeRequest = async (
-    url: string,
-    method: string = "GET",
-    headers: Record<string, string> | undefined = undefined,
-    data: any = null
-  ): Promise<void> => {
-    let response: AxiosResponse | undefined;
-    setIsLoading(true);
+        try
+        {
+            let response;//en let som kommer til at indeholde response fra api'en
 
-    // Check if method is valid
-    const validMethods = [
-      "GET",
-      "POST",
-      "PUT",
-      "DELETE",
-      "PATCH",
-      "OPTIONS",
-      "HEAD",
-    ];
-    if (!validMethods.includes(method.toUpperCase())) {
-      console.error(`Invalid method: ${method}`);
-      setError(true);
-      setIsLoading(false);
-      return;
+            switch(method){// gør det samme som en masse elif statements men er mere performance velligt når man kommer over 3 statements
+                case "GET":
+                    response = await axios.get(url, { headers, params });//await betyder at linjen skal vente på den asynkrone funktion bliver færdig
+                    break;
+
+                case "POST":
+                    response = await axios.post(url, bodydata, { headers, params });
+                    break;
+
+                case "DELETE":
+                    response = await axios.delete(url, { headers, params });
+                    break;
+
+                case "PUT":
+                    response = await axios.put(url, bodydata, { headers, params });
+                    break;
+
+                case "PATCH":
+                    response = await axios.patch(url, bodydata, { headers, params });
+                    break;
+
+                default:
+                    throw new Error( "Invalid method. GET, POST, PUT, PATCH or DELETE was expected.");
+            }
+
+            if( response && response.data !== undefined){
+                setData( response.data );
+                setError( null );
+            }
+            else{
+                throw new Error("Empty rensponse or no data returned");
+            }
+        }
+        catch (error)//hvis der opstår en fejl kørrer vi denne kode for at vise det til brugeren og os selv
+        {
+            console.log( "ERROR", error );
+            setError( "an error has ocurred: " + error.message);
+            setData(null);
+        }
+        finally//bliver kørt i slutningen uanset om vi har fået en fejl eller ej
+        {
+            setIsLoading(false);
+        }
     }
 
-    // Default headers
-    const defaultHeaders = {
-      "x-api-key": import.meta.env.VITE_API_KEY,
-    };
-
-    // Merge default headers with provided headers
-    const mergedHeaders = { ...defaultHeaders, ...headers };
-
-    const options: AxiosRequestConfig = {
-      url: `${domain}/${url}`,
-      method: method,
-      headers: mergedHeaders,
-      data: data,
-    };
-
-    try {
-      response = await axios.request(options);
-
-      if (response && response.data !== undefined) {
-        setData(response.data);
-        setError(false);
-      } else {
-        setData(null);
-        setError(true);
-        throw new Error("Error: No data in response");
-      }
-
-      // Throw an error if the response status is not in the 2xx range
-      if (response.status < 200 || response.status >= 300) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-    } catch (error) {
-      setData(null);
-      setError(true);
-      console.log(error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { makeRequest, isLoading, data, error };
+    return { makeRequest, isLoading, data, error };//sender den data tilbage som skal bruges uden for dette script som et JSON objekt(den data inden i tuborg klapperne)
 }
 
-export default useRequestData;
+export default useRequestData
